@@ -1,0 +1,11 @@
+# Use a lightweight Java image
+FROM openjdk:17-jdk-slim
+
+# Copy the jar file from target folder
+COPY target/*.jar app.jar
+
+# Expose the port your app runs on
+EXPOSE 8080
+
+# Command to run the jar
+ENTRYPOINT ["java", "-jar", "/app.jar"]
