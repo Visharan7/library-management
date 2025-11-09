@@ -1,14 +1,14 @@
-# Use a stable OpenJDK 17 image
+# Use a lightweight Java image
 FROM eclipse-temurin:17-jdk
 
-# Set the working directory
+# Set working directory
 WORKDIR /app
 
-# Copy the built JAR file into the container
+# Copy the JAR file built by Maven
 COPY target/librarymanagement-0.0.1-SNAPSHOT.jar app.jar
 
-# Expose the port your app runs on
+# Expose port 8080 (Spring Boot default)
 EXPOSE 8080
 
-# Run the JAR file
+# Run the app
 ENTRYPOINT ["java", "-jar", "app.jar"]
