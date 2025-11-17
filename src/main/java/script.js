@@ -1,5 +1,5 @@
 // ===== USER SECTION =====
-const userApi = "http://localhost:8081/users";
+const userApi = "https://library-management-production-f838.up.railway.app/users";
 let allUsers = [];
 
 document.getElementById("userForm").addEventListener("submit", async (e) => {
@@ -105,7 +105,7 @@ function searchUsers() {
 }
 
 // ===== BOOK SECTION =====
-const apiUrl = "http://localhost:8081/books";
+const apiUrl = "https://library-management-production-f838.up.railway.app/books";
 let editMode = false;
 let editBookId = null;
 let allBooks = [];
