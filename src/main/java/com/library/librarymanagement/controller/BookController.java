@@ -3,13 +3,14 @@ package com.library.librarymanagement.controller;
 import com.library.librarymanagement.model.Book;
 import com.library.librarymanagement.repository.BookRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/books")
-@CrossOrigin(origins = "*") // allows access from frontend later
+@CrossOrigin(origins = "*") // can change "*" to your frontend URL for security
 public class BookController {
 
     @Autowired
@@ -17,34 +18,39 @@ public class BookController {
 
     // Get all books
     @GetMapping
-    public List<Book> getAllBooks() {
-        return bookRepository.findAll();
+    public ResponseEntity<List<Book>> getAllBooks() {
+        List<Book> books = bookRepository.findAll();
+        return ResponseEntity.ok(books);
     }
 
     // Add a new book
     @PostMapping
-    public Book addBook(@RequestBody Book book) {
-        return bookRepository.save(book);
+    public ResponseEntity<Book> addBook(@RequestBody Book book) {
+        Book savedBook = bookRepository.save(book);
+        return ResponseEntity.ok(savedBook);
     }
 
- // Update an existing book
+    // Update an existing book
     @PutMapping("/{id}")
-    public Book updateBook(@PathVariable Long id, @RequestBody Book updatedBook) {
+    public ResponseEntity<Book> updateBook(@PathVariable Long id, @RequestBody Book updatedBook) {
         return bookRepository.findById(id)
             .map(book -> {
                 book.setTitle(updatedBook.getTitle());
                 book.setAuthor(updatedBook.getAuthor());
                 book.setCategory(updatedBook.getCategory());
                 book.setAvailable(updatedBook.isAvailable());
-                return bookRepository.save(book);
+                return ResponseEntity.ok(bookRepository.save(book));
             })
-            .orElseThrow(() -> new RuntimeException("Book not found with id " + id));
+            .orElse(ResponseEntity.notFound().build());
     }
-
 
     // Delete a book by ID
     @DeleteMapping("/{id}")
-    public void deleteBook(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteBook(@PathVariable Long id) {
+        if (!bookRepository.existsById(id)) {
+            return ResponseEntity.notFound().build();
+        }
         bookRepository.deleteById(id);
+        return ResponseEntity.noContent().build(); // 204 = success, no content
     }
 }

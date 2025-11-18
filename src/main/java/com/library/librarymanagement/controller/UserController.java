@@ -1,17 +1,16 @@
 package com.library.librarymanagement.controller;
 
-import org.springframework.http.ResponseEntity;
-
 import com.library.librarymanagement.model.User;
 import com.library.librarymanagement.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping("/users")
-@CrossOrigin(origins = "*") // allows frontend access later
+@CrossOrigin(origins = "*") // can restrict to your frontend URL later
 public class UserController {
 
     @Autowired
@@ -19,16 +18,19 @@ public class UserController {
 
     // Get all users
     @GetMapping
-    public List<User> getAllUsers() {
-        return userRepository.findAll();
+    public ResponseEntity<List<User>> getAllUsers() {
+        List<User> users = userRepository.findAll();
+        return ResponseEntity.ok(users);
     }
 
     // Add a new user
     @PostMapping
-    public User addUser(@RequestBody User user) {
-        return userRepository.save(user);
+    public ResponseEntity<User> addUser(@RequestBody User user) {
+        User savedUser = userRepository.save(user);
+        return ResponseEntity.ok(savedUser);
     }
-    
+
+    // Update user
     @PutMapping("/{id}")
     public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User updatedUser) {
         return userRepository.findById(id)
@@ -41,13 +43,13 @@ public class UserController {
             .orElse(ResponseEntity.notFound().build());
     }
 
+    // Delete user
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         if (!userRepository.existsById(id)) {
             return ResponseEntity.notFound().build();
         }
         userRepository.deleteById(id);
-        return ResponseEntity.noContent().build(); // 204 means success but no content
+        return ResponseEntity.noContent().build(); // 204 = success
     }
-
 }
