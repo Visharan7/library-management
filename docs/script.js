@@ -6,6 +6,49 @@ const githubOnlyMode = true;
 const LS_USERS_KEY = "demo_users";
 const LS_BOOKS_KEY = "demo_books";
 
+const DEFAULT_BOOKS = [
+  {
+    id: 101,
+    title: "Clean Code",
+    author: "Robert C. Martin",
+    category: "Programming",
+    available: true
+  },
+  {
+    id: 102,
+    title: "Effective Java",
+    author: "Joshua Bloch",
+    category: "Programming",
+    available: true
+  },
+  {
+    id: 103,
+    title: "Atomic Habits",
+    author: "James Clear",
+    category: "Self Help",
+    available: true
+  },
+  {
+    id: 104,
+    title: "The Alchemist",
+    author: "Paulo Coelho",
+    category: "Fiction",
+    available: false
+  }
+];
+
+function loadBooks() {
+  let storedBooks = loadFromLS(LS_BOOKS_KEY);
+
+  if(storedBooks.length === 0) {
+    saveToLS(LS_BOOKS_KEY, DEFAULT_BOOKS);
+    storedBooks = DEFAULT_BOOKS;
+  }
+
+  allBooks = storedBooks;
+  displayBooks(allBooks);
+}
+
 function loadFromLS(key) {
   return JSON.parse(localStorage.getItem(key) || "[]");
 }
