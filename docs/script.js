@@ -6,6 +6,9 @@ const githubOnlyMode = true;
 const LS_USERS_KEY = "demo_users";
 const LS_BOOKS_KEY = "demo_books";
 
+/**************************************************
+ * DEFAULT BOOKS (shown on first visit)
+ **************************************************/
 const DEFAULT_BOOKS = [
   {
     id: 101,
@@ -37,18 +40,9 @@ const DEFAULT_BOOKS = [
   }
 ];
 
-function loadBooks() {
-  let storedBooks = loadFromLS(LS_BOOKS_KEY);
-
-  if(storedBooks.length === 0) {
-    saveToLS(LS_BOOKS_KEY, DEFAULT_BOOKS);
-    storedBooks = DEFAULT_BOOKS;
-  }
-
-  allBooks = storedBooks;
-  displayBooks(allBooks);
-}
-
+/**************************************************
+ * LOCAL STORAGE HELPERS
+ **************************************************/
 function loadFromLS(key) {
   return JSON.parse(localStorage.getItem(key) || "[]");
 }
@@ -64,7 +58,7 @@ let allUsers = [];
 let editUserId = null;
 let isEditingUser = false;
 
-document.getElementById("userForm").addEventListener("submit", async (e) => {
+document.getElementById("userForm").addEventListener("submit", (e) => {
   e.preventDefault();
 
   const user = {
@@ -78,38 +72,30 @@ document.getElementById("userForm").addEventListener("submit", async (e) => {
     return;
   }
 
-  try {
-    if (githubOnlyMode) {
-      let users = loadFromLS(LS_USERS_KEY);
+  let users = loadFromLS(LS_USERS_KEY);
 
-      if (isEditingUser) {
-        users = users.map(u =>
-          u.id === editUserId ? { ...u, ...user } : u
-        );
-      } else {
-        user.id = Date.now();
-        users.push(user);
-      }
-
-      saveToLS(LS_USERS_KEY, users);
-    }
-
-    alert(isEditingUser ? "✅ User updated!" : "✅ User added!");
-
-    e.target.reset();
-    editUserId = null;
-    isEditingUser = false;
-
-    const btn = document.querySelector("#userForm button");
-    btn.textContent = "Add User";
-    btn.style.backgroundColor = "#3366cc";
-
-    getUsers();
-
-  } catch (err) {
-    console.error(err);
-    alert("❌ Error saving user");
+  if (isEditingUser) {
+    users = users.map(u =>
+      u.id === editUserId ? { ...u, ...user } : u
+    );
+  } else {
+    user.id = Date.now();
+    users.push(user);
   }
+
+  saveToLS(LS_USERS_KEY, users);
+
+  alert(isEditingUser ? "✅ User updated!" : "✅ User added!");
+
+  e.target.reset();
+  editUserId = null;
+  isEditingUser = false;
+
+  const btn = document.querySelector("#userForm button");
+  btn.textContent = "Add User";
+  btn.style.backgroundColor = "#3366cc";
+
+  getUsers();
 });
 
 function editUser(id, name, email, phone) {
@@ -160,10 +146,12 @@ function displayUsers(users) {
 
 function searchUsers() {
   const q = document.getElementById("userSearch").value.toLowerCase();
-  displayUsers(allUsers.filter(u =>
-    u.name.toLowerCase().includes(q) ||
-    u.email.toLowerCase().includes(q)
-  ));
+  displayUsers(
+    allUsers.filter(u =>
+      u.name.toLowerCase().includes(q) ||
+      u.email.toLowerCase().includes(q)
+    )
+  );
 }
 
 /**************************************************
@@ -190,29 +178,23 @@ function addOrUpdateBook(e) {
     return;
   }
 
-  try {
-    let books = loadFromLS(LS_BOOKS_KEY);
+  let books = loadFromLS(LS_BOOKS_KEY);
 
-    if (isEditingBook) {
-      books = books.map(b =>
-        b.id === editBookId ? { ...b, ...book } : b
-      );
-    } else {
-      book.id = Date.now();
-      books.push(book);
-    }
-
-    saveToLS(LS_BOOKS_KEY, books);
-
-    alert(isEditingBook ? "✅ Book updated!" : "✅ Book added!");
-
-    resetBookForm();
-    loadBooks();
-
-  } catch (err) {
-    console.error(err);
-    alert("❌ Error saving book");
+  if (isEditingBook) {
+    books = books.map(b =>
+      b.id === editBookId ? { ...b, ...book } : b
+    );
+  } else {
+    book.id = Date.now();
+    books.push(book);
   }
+
+  saveToLS(LS_BOOKS_KEY, books);
+
+  alert(isEditingBook ? "✅ Book updated!" : "✅ Book added!");
+
+  resetBookForm();
+  loadBooks();
 }
 
 function editBook(id, title, author, category) {
@@ -236,8 +218,20 @@ function deleteBook(id) {
   loadBooks();
 }
 
+/**************************************************
+ * LOAD BOOKS + SEED DEFAULTS
+ **************************************************/
 function loadBooks() {
-  allBooks = loadFromLS(LS_BOOKS_KEY);
+
+  let storedBooks = loadFromLS(LS_BOOKS_KEY);
+
+  // Seed demo books only first time
+  if (!storedBooks || storedBooks.length === 0) {
+    saveToLS(LS_BOOKS_KEY, DEFAULT_BOOKS);
+    storedBooks = DEFAULT_BOOKS;
+  }
+
+  allBooks = storedBooks;
   displayBooks(allBooks);
 }
 
