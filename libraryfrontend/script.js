@@ -1,6 +1,5 @@
-// ===== DEPLOYED BACKEND URLs =====
-const userApi = "https://library-management-production-f838.up.railway.app/users";
-const bookApi = "https://library-management-production-f838.up.railway.app/books";
+const userApi = "http://localhost:8080/users";
+const bookApi = "http://localhost:8080/books";
 
 // ===== USER SECTION =====
 let allUsers = [];
