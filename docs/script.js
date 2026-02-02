@@ -1,7 +1,22 @@
-const userApi = "http://localhost:8080/users";
-const bookApi = "http://localhost:8080/books";
+/**************************************************
+ * GITHUB-ONLY DEMO MODE
+ **************************************************/
+const githubOnlyMode = true;
 
-// ===== USER SECTION =====
+const LS_USERS_KEY = "demo_users";
+const LS_BOOKS_KEY = "demo_books";
+
+function loadFromLS(key) {
+  return JSON.parse(localStorage.getItem(key) || "[]");
+}
+
+function saveToLS(key, data) {
+  localStorage.setItem(key, JSON.stringify(data));
+}
+
+/**************************************************
+ * USER SECTION
+ **************************************************/
 let allUsers = [];
 let editUserId = null;
 let isEditingUser = false;
@@ -20,29 +35,37 @@ document.getElementById("userForm").addEventListener("submit", async (e) => {
     return;
   }
 
-  const method = isEditingUser ? "PUT" : "POST";
-  const url = isEditingUser ? `${userApi}/${editUserId}` : userApi;
-
   try {
-    const response = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(user),
-    });
+    if (githubOnlyMode) {
+      let users = loadFromLS(LS_USERS_KEY);
 
-    if (!response.ok) throw new Error("Failed to save user");
+      if (isEditingUser) {
+        users = users.map(u =>
+          u.id === editUserId ? { ...u, ...user } : u
+        );
+      } else {
+        user.id = Date.now();
+        users.push(user);
+      }
 
-    alert(isEditingUser ? "✅ User updated successfully!" : "✅ User added successfully!");
+      saveToLS(LS_USERS_KEY, users);
+    }
+
+    alert(isEditingUser ? "✅ User updated!" : "✅ User added!");
+
     e.target.reset();
-    isEditingUser = false;
     editUserId = null;
-    document.querySelector("#userForm button").textContent = "Add User";
-    document.querySelector("#userForm button").style.backgroundColor = "#3366cc";
+    isEditingUser = false;
+
+    const btn = document.querySelector("#userForm button");
+    btn.textContent = "Add User";
+    btn.style.backgroundColor = "#3366cc";
 
     getUsers();
+
   } catch (err) {
     console.error(err);
-    alert("❌ Error saving user! Please try again.");
+    alert("❌ Error saving user");
   }
 });
 
@@ -59,14 +82,17 @@ function editUser(id, name, email, phone) {
   btn.style.backgroundColor = "orange";
 }
 
-async function getUsers() {
-  try {
-    const res = await fetch(userApi);
-    allUsers = await res.json();
-    displayUsers(allUsers);
-  } catch (err) {
-    console.error("Error loading users:", err);
-  }
+function getUsers() {
+  allUsers = loadFromLS(LS_USERS_KEY);
+  displayUsers(allUsers);
+}
+
+function deleteUser(id) {
+  if (!confirm("Delete this user?")) return;
+
+  const users = loadFromLS(LS_USERS_KEY).filter(u => u.id !== id);
+  saveToLS(LS_USERS_KEY, users);
+  getUsers();
 }
 
 function displayUsers(users) {
@@ -81,45 +107,32 @@ function displayUsers(users) {
       <td>${u.email}</td>
       <td>${u.phone}</td>
       <td>
-        <button onclick="editUser(${u.id}, '${u.name}', '${u.email}', '${u.phone}')"
-          style="background-color: orange; color: white; border: none; padding: 5px 8px; border-radius: 5px;">Edit</button>
-        <button onclick="deleteUser(${u.id})"
-          style="background-color: red; color: white; border: none; padding: 5px 8px; border-radius: 5px;">Delete</button>
+        <button onclick="editUser(${u.id}, '${u.name}', '${u.email}', '${u.phone}')">Edit</button>
+        <button onclick="deleteUser(${u.id})">Delete</button>
       </td>
     `;
     tbody.appendChild(row);
   });
 }
 
-async function deleteUser(id) {
-  if (!confirm("Are you sure you want to delete this user?")) return;
-  try {
-    const res = await fetch(`${userApi}/${id}`, { method: "DELETE" });
-    if (!res.ok) throw new Error("Failed to delete user");
-    alert("🗑️ User deleted successfully!");
-    getUsers();
-  } catch (err) {
-    console.error("Error deleting user:", err);
-    alert("❌ Error deleting user! Please try again.");
-  }
-}
-
 function searchUsers() {
-  const query = document.getElementById("userSearch").value.toLowerCase();
-  const filtered = allUsers.filter(u =>
-    u.name.toLowerCase().includes(query) || u.email.toLowerCase().includes(query)
-  );
-  displayUsers(filtered);
+  const q = document.getElementById("userSearch").value.toLowerCase();
+  displayUsers(allUsers.filter(u =>
+    u.name.toLowerCase().includes(q) ||
+    u.email.toLowerCase().includes(q)
+  ));
 }
 
-// ===== BOOK SECTION =====
+/**************************************************
+ * BOOK SECTION
+ **************************************************/
 let allBooks = [];
 let editBookId = null;
 let isEditingBook = false;
 
 document.getElementById("bookForm").addEventListener("submit", addOrUpdateBook);
 
-async function addOrUpdateBook(e) {
+function addOrUpdateBook(e) {
   e.preventDefault();
 
   const book = {
@@ -130,27 +143,32 @@ async function addOrUpdateBook(e) {
   };
 
   if (!book.title || !book.author || !book.category) {
-    alert("⚠️ Please fill all fields!");
+    alert("⚠️ Fill all fields!");
     return;
   }
 
-  const method = isEditingBook ? "PUT" : "POST";
-  const url = isEditingBook ? `${bookApi}/${editBookId}` : bookApi;
-
   try {
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(book)
-    });
-    if (!res.ok) throw new Error("Failed to save book");
+    let books = loadFromLS(LS_BOOKS_KEY);
 
-    alert(isEditingBook ? "✅ Book updated successfully!" : "✅ Book added successfully!");
+    if (isEditingBook) {
+      books = books.map(b =>
+        b.id === editBookId ? { ...b, ...book } : b
+      );
+    } else {
+      book.id = Date.now();
+      books.push(book);
+    }
+
+    saveToLS(LS_BOOKS_KEY, books);
+
+    alert(isEditingBook ? "✅ Book updated!" : "✅ Book added!");
+
     resetBookForm();
     loadBooks();
+
   } catch (err) {
     console.error(err);
-    alert("❌ Error saving book! Please try again.");
+    alert("❌ Error saving book");
   }
 }
 
@@ -167,27 +185,17 @@ function editBook(id, title, author, category) {
   btn.style.backgroundColor = "orange";
 }
 
-async function deleteBook(id) {
-  if (!confirm("Are you sure you want to delete this book?")) return;
-  try {
-    const res = await fetch(`${bookApi}/${id}`, { method: "DELETE" });
-    if (!res.ok) throw new Error("Failed to delete book");
-    alert("🗑️ Book deleted successfully!");
-    loadBooks();
-  } catch (err) {
-    console.error(err);
-    alert("❌ Error deleting book! Please try again.");
-  }
+function deleteBook(id) {
+  if (!confirm("Delete this book?")) return;
+
+  const books = loadFromLS(LS_BOOKS_KEY).filter(b => b.id !== id);
+  saveToLS(LS_BOOKS_KEY, books);
+  loadBooks();
 }
 
-async function loadBooks() {
-  try {
-    const res = await fetch(bookApi);
-    allBooks = await res.json();
-    displayBooks(allBooks);
-  } catch (err) {
-    console.error("Error loading books:", err);
-  }
+function loadBooks() {
+  allBooks = loadFromLS(LS_BOOKS_KEY);
+  displayBooks(allBooks);
 }
 
 function displayBooks(books) {
@@ -201,12 +209,10 @@ function displayBooks(books) {
       <td>${b.title}</td>
       <td>${b.author}</td>
       <td>${b.category}</td>
-      <td>${b.available ? "✅ Available" : "❌ Not Available"}</td>
+      <td>${b.available ? "✅" : "❌"}</td>
       <td>
-        <button onclick="editBook(${b.id}, '${b.title}', '${b.author}', '${b.category}')"
-          style="background-color: orange; color: white; border: none; padding: 5px 8px; border-radius: 5px;">Edit</button>
-        <button onclick="deleteBook(${b.id})"
-          style="background-color: red; color: white; border: none; padding: 5px 8px; border-radius: 5px;">Delete</button>
+        <button onclick="editBook(${b.id}, '${b.title}', '${b.author}', '${b.category}')">Edit</button>
+        <button onclick="deleteBook(${b.id})">Delete</button>
       </td>
     `;
     tbody.appendChild(row);
@@ -226,26 +232,9 @@ function resetBookForm() {
   btn.style.backgroundColor = "#3366cc";
 }
 
-function searchBooks() {
-  const query = document.getElementById("bookSearch").value.toLowerCase();
-  const categoryFilter = document.getElementById("filterCategory").value;
-  const availabilityFilter = document.getElementById("filterAvailability").value;
-
-  const filtered = allBooks.filter(book => {
-    const matchesSearch = book.title.toLowerCase().includes(query) || book.author.toLowerCase().includes(query);
-    const matchesCategory = !categoryFilter || book.category === categoryFilter;
-    const matchesAvailability =
-      !availabilityFilter ||
-      (availabilityFilter === "available" && book.available) ||
-      (availabilityFilter === "unavailable" && !book.available);
-
-    return matchesSearch && matchesCategory && matchesAvailability;
-  });
-
-  displayBooks(filtered);
-}
-
-// ===== INITIALIZE =====
+/**************************************************
+ * INIT
+ **************************************************/
 window.onload = () => {
   getUsers();
   loadBooks();
